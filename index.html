@@ -1,0 +1,59 @@
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<div id="app">
+	<input type="radio" id="hello" name="status" value="hello" v-model="status">
+	<label for="hello">Hello</label>
+
+	<input type="radio" id="close" name="status" value="close" v-model="status">
+	<label for="close">Close</label><br>
+
+	<button @click="send()">Enviar</button>
+</div>
+
+<script setup>
+	const { createApp, onUnmounted, ref } = Vue
+
+	createApp({
+		setup() {
+			const message = ref('Hello vue!')
+
+			const ws = new WebSocket('ws://localhost:8000')
+
+			const status = ref()
+
+			ws.onmessage = function (event) {
+				console.log(event)
+			}
+
+			ws.onclose = function (event) {
+				console.log('onclose', event)
+				alert('websocket connection close')
+			}
+
+			ws.onerror = function (error) {
+				console.log('onerror', error)
+			}
+
+			ws.onopen = function () {
+				console.log('onopen')
+			}
+
+			function send() {
+				if (ws.readyState === 1) {
+					ws.send(JSON.stringify({ status: status.value }))
+				}
+
+				else alert('lost connection')
+			}
+
+			onUnmounted(() => {
+				ws.close()
+			})
+
+			return {
+				send,
+				status
+			}
+		}
+	}).mount('#app')
+</script>
